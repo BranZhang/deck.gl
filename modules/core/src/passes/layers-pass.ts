@@ -2,17 +2,56 @@ import GL from '@luma.gl/constants';
 import Pass from './pass';
 import {clear, setParameters, withParameters, cssToDeviceRatio} from '@luma.gl/core';
 
+import type {Framebuffer} from '@luma.gl/core';
+import type Viewport from '../viewports/viewport';
+import type View from '../views/view';
+import type Layer from '../lib/layer';
+import type Effect from '../lib/effect';
+
+export type LayersPassRenderOptions = {
+  target?: Framebuffer;
+  pass: string;
+  layers: Layer[];
+  viewports: Viewport[];
+  onViewportActive: (viewport: Viewport) => void;
+  views?: Record<string, View>;
+  effects?: Effect[];
+  clearCanvas?: boolean;
+  layerFilter?: (context: FilterContext) => boolean;
+  moduleParameters?: any;
+};
+
+type DrawLayerParameters = {
+  shouldDrawLayer: boolean;
+  layerRenderIndex: number;
+  moduleParameters?: any;
+  layerParameters?: any;
+};
+
+type FilterContext = {
+  layer: Layer;
+  viewport: Viewport;
+  isPicking: boolean;
+  renderPass: string;
+};
+
+export type RenderStats = {
+  totalCount: number;
+  visibleCount: number;
+  compositeCount: number;
+  pickableCount: number;
+};
+
 export default class LayersPass extends Pass {
-  render(props) {
+  render(props: LayersPassRenderOptions): any {
     const gl = this.gl;
 
     setParameters(gl, {framebuffer: props.target});
     return this._drawLayers(props);
   }
 
-  // PRIVATE
   // Draw a list of layers in a list of viewports
-  _drawLayers(props) {
+  private _drawLayers(props: LayersPassRenderOptions) {
     const {viewports, views, onViewportActive, clearCanvas = true} = props;
     props.pass = props.pass || 'unknown';
 
@@ -21,11 +60,9 @@ export default class LayersPass extends Pass {
       clearGLCanvas(gl);
     }
 
-    const renderStats = [];
+    const renderStats: RenderStats[] = [];
 
-    for (const viewportOrDescriptor of viewports) {
-      // Get a viewport from a viewport descriptor (which can be a plain viewport)
-      const viewport = viewportOrDescriptor.viewport || viewportOrDescriptor;
+    for (const viewport of viewports) {
       const view = views && views[viewport.id];
 
       // Update context to point to this viewport
@@ -33,14 +70,20 @@ export default class LayersPass extends Pass {
 
       const drawLayerParams = this._getDrawLayerParams(viewport, props);
 
-      props.view = view;
-
       // render this viewport
+      // @ts-expect-error
       const subViewports = viewport.subViewports || [viewport];
       for (const subViewport of subViewports) {
-        props.viewport = subViewport;
-
-        const stats = this._drawLayersInViewport(gl, props, drawLayerParams);
+        const stats = this._drawLayersInViewport(
+          gl,
+          {
+            viewport: subViewport,
+            view,
+            pass: props.pass,
+            layers: props.layers
+          },
+          drawLayerParams
+        );
         renderStats.push(stats);
       }
     }
@@ -50,10 +93,14 @@ export default class LayersPass extends Pass {
   // Resolve the parameters needed to draw each layer
   // When a viewport contains multiple subviewports (e.g. repeated web mercator map),
   // this is only done once for the parent viewport
-  _getDrawLayerParams(viewport, {layers, pass, layerFilter, effects, moduleParameters}) {
-    const drawLayerParams = [];
+  private _getDrawLayerParams(
+    viewport: Viewport,
+    {layers, pass, layerFilter, effects, moduleParameters}: LayersPassRenderOptions
+  ): DrawLayerParameters[] {
+    const drawLayerParams: DrawLayerParameters[] = [];
     const indexResolver = layerIndexResolver();
-    const drawContext = {
+    const drawContext: FilterContext = {
+      layer: layers[0],
       viewport,
       isPicking: pass.startsWith('picking'),
       renderPass: pass
@@ -74,7 +121,7 @@ export default class LayersPass extends Pass {
       // It can be the same as another layer
       const layerRenderIndex = indexResolver(layer, shouldDrawLayer);
 
-      const layerParam = {
+      const layerParam: DrawLayerParameters = {
         shouldDrawLayer,
         layerRenderIndex
       };
@@ -97,7 +144,7 @@ export default class LayersPass extends Pass {
   // TODO - when picking we could completely skip rendering viewports that dont
   // intersect with the picking rect
   /* eslint-disable max-depth, max-statements */
-  _drawLayersInViewport(gl, {layers, pass, viewport, view}, drawLayerParams) {
+  private _drawLayersInViewport(gl, {layers, pass, viewport, view}, drawLayerParams): RenderStats {
     const glViewport = getGLViewport(gl, {viewport});
 
     if (view && view.props.clear) {
@@ -158,20 +205,25 @@ export default class LayersPass extends Pass {
   /* eslint-enable max-depth, max-statements */
 
   /* Methods for subclass overrides */
-  shouldDrawLayer(layer) {
+  protected shouldDrawLayer(layer: Layer): boolean {
     return true;
   }
 
-  getModuleParameters(layer, effects) {
+  protected getModuleParameters(layer: Layer, effects?: Effect[]): any {
     return null;
   }
 
-  getLayerParameters(layer, layerIndex) {
+  protected getLayerParameters(layer: Layer, layerIndex: number, viewport: Viewport): any {
     return layer.props.parameters;
   }
 
   /* Private */
-  _shouldDrawLayer(layer, drawContext, layerFilter, layerFilterCache) {
+  private _shouldDrawLayer(
+    layer: Layer,
+    drawContext: FilterContext,
+    layerFilter: ((params: FilterContext) => boolean) | undefined,
+    layerFilterCache: Record<string, boolean>
+  ) {
     const shouldDrawLayer = this.shouldDrawLayer(layer) && layer.props.visible;
 
     if (!shouldDrawLayer) {
@@ -180,13 +232,14 @@ export default class LayersPass extends Pass {
 
     drawContext.layer = layer;
 
-    let parent = layer.parent;
+    let parent = layer.parent as Layer;
     while (parent) {
+      // @ts-ignore
       if (!parent.props.visible || !parent.filterSubLayer(drawContext)) {
         return false;
       }
       drawContext.layer = parent;
-      parent = parent.parent;
+      parent = parent.parent as Layer;
     }
 
     if (layerFilter) {
@@ -205,10 +258,17 @@ export default class LayersPass extends Pass {
     return true;
   }
 
-  _getModuleParameters(layer, effects, pass, overrides) {
+  private _getModuleParameters(
+    layer: Layer,
+    effects: Effect[] | undefined,
+    pass: string,
+    overrides: any
+  ): any {
     const moduleParameters = Object.assign(Object.create(layer.props), {
       autoWrapLongitude: layer.wrapLongitude,
+      // @ts-ignore
       viewport: layer.context.viewport,
+      // @ts-ignore
       mousePosition: layer.context.mousePosition,
       pickingActive: 0,
       devicePixelRatio: cssToDeviceRatio(this.gl)
@@ -230,7 +290,10 @@ export default class LayersPass extends Pass {
 // all its descendants will be resolved relative to that index.
 // This implementation assumes that parent layers always appear before its children
 // which is true if the layer array comes from the LayerManager
-export function layerIndexResolver(startIndex = 0, layerIndices = {}) {
+export function layerIndexResolver(
+  startIndex: number = 0,
+  layerIndices: Record<string, number> = {}
+): (layer: Layer, isDrawn: boolean) => number {
   const resolvers = {};
 
   const resolveLayerIndex = (layer, isDrawn) => {
@@ -270,7 +333,10 @@ export function layerIndexResolver(startIndex = 0, layerIndices = {}) {
 }
 
 // Convert viewport top-left CSS coordinates to bottom up WebGL coordinates
-function getGLViewport(gl, {viewport}) {
+function getGLViewport(
+  gl: WebGLRenderingContext,
+  {viewport}: {viewport: Viewport}
+): [x: number, y: number, width: number, height: number] {
   // TODO - dummy default for node
   // Fallback to width/height when clientWidth/clientHeight are 0 or undefined.
   const height = gl.canvas ? gl.canvas.clientHeight || gl.canvas.height : 100;
@@ -285,7 +351,7 @@ function getGLViewport(gl, {viewport}) {
   ];
 }
 
-function clearGLCanvas(gl) {
+function clearGLCanvas(gl: WebGLRenderingContext) {
   const width = gl.drawingBufferWidth;
   const height = gl.drawingBufferHeight;
   // clear depth and color buffers, restoring transparency
