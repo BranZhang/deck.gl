@@ -37,7 +37,7 @@ import typedArrayManager from '../utils/typed-array-manager';
 import Component from '../lifecycle/component';
 import LayerState from './layer-state';
 
-import {worldToPixels} from '@math.gl/web-mercator';
+import {worldToPixels} from '../mathgl/web-mercator';
 
 import {load} from '@loaders.gl/core';
 

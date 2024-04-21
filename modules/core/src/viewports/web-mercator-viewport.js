@@ -31,7 +31,7 @@ import {
   fovyToAltitude,
   fitBounds,
   getBounds
-} from '@math.gl/web-mercator';
+} from '../mathgl/web-mercator';
 
 // TODO - import from math.gl
 import * as vec2 from 'gl-matrix/vec2';
@@ -93,6 +93,7 @@ export default class WebMercatorViewport extends Viewport {
       } else {
         fovy = altitudeToFovy(altitude);
       }
+      // @ts-ignore
       projectionParameters = getProjectionParameters({
         width,
         height,

@@ -1,6 +1,6 @@
 import View from './view';
 import Viewport from '../viewports/viewport';
-import {getMeterZoom} from '@math.gl/web-mercator';
+import {getMeterZoom} from '../mathgl/web-mercator';
 import {Matrix4, _SphericalCoordinates as SphericalCoordinates} from 'math.gl';
 import FirstPersonController from '../controllers/first-person-controller';
 

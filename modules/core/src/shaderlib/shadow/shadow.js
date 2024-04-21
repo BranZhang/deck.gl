@@ -21,7 +21,7 @@ import {COORDINATE_SYSTEM, PROJECTION_MODE} from '../../lib/constants';
 import project from '../project/project';
 import {Vector3, Matrix4} from 'math.gl';
 import memoize from '../../utils/memoize';
-import {pixelsToWorld} from '@math.gl/web-mercator';
+import {pixelsToWorld} from '../../mathgl/web-mercator';
 
 const vs = `
 const int max_lights = 2;

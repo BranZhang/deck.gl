@@ -31,7 +31,7 @@ import {
   worldToLngLat,
   worldToPixels,
   pixelsToWorld
-} from '@math.gl/web-mercator';
+} from '../mathgl/web-mercator';
 
 import {PROJECTION_MODE} from '../lib/constants';
 
@@ -95,9 +95,11 @@ export default class Viewport {
 
   get projectionMode() {
     if (this.isGeospatial) {
-      return this.zoom < 12
-        ? PROJECTION_MODE.WEB_MERCATOR
-        : PROJECTION_MODE.WEB_MERCATOR_AUTO_OFFSET;
+      // ZZZCCC
+      return PROJECTION_MODE.WEB_MERCATOR;
+      // return this.zoom < 12
+      //   ? PROJECTION_MODE.WEB_MERCATOR
+      //   : PROJECTION_MODE.WEB_MERCATOR_AUTO_OFFSET;
     }
     return PROJECTION_MODE.IDENTITY;
   }

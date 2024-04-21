@@ -2,7 +2,7 @@ import View from './view';
 import Viewport from '../viewports/viewport';
 
 import {Matrix4} from 'math.gl';
-import {pixelsToWorld} from '@math.gl/web-mercator';
+import {pixelsToWorld} from '../mathgl/web-mercator';
 import * as vec2 from 'gl-matrix/vec2';
 import OrthographicController from '../controllers/orthographic-controller';
 

@@ -8,7 +8,7 @@ import WebMercatorViewport from '../../viewports/web-mercator-viewport';
 
 import * as vec4 from 'gl-matrix/vec4';
 import * as vec3 from 'gl-matrix/vec3';
-import {addMetersToLngLat} from '@math.gl/web-mercator';
+import {addMetersToLngLat} from '../../mathgl/web-mercator';
 
 // In project.glsl, offset modes calculate z differently from LNG_LAT mode.
 // offset modes apply the y adjustment (unitsPerMeter2) when projecting z

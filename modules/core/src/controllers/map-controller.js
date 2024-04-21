@@ -1,7 +1,7 @@
 import {clamp} from 'math.gl';
 import Controller from './controller';
 import ViewState from './view-state';
-import {normalizeViewportProps} from '@math.gl/web-mercator';
+import {normalizeViewportProps} from '../mathgl/web-mercator';
 import assert from '../utils/assert';
 
 const PITCH_MOUSE_THRESHOLD = 5;

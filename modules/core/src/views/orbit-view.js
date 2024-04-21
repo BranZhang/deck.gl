@@ -2,7 +2,7 @@ import View from './view';
 import Viewport from '../viewports/viewport';
 
 import {Matrix4} from 'math.gl';
-import {pixelsToWorld, fovyToAltitude} from '@math.gl/web-mercator';
+import {pixelsToWorld, fovyToAltitude} from '../mathgl/web-mercator';
 import OrbitController from '../controllers/orbit-controller';
 
 const DEGREES_TO_RADIANS = Math.PI / 180;
