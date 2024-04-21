@@ -10,8 +10,9 @@ export function getDeckInstance({map, gl, deck}) {
   const customRender = deck && deck.props._customRender;
 
   const deckProps = {
-    // @ts-ignore
-    srs: (window?.srs === 'epsg:3857') ? SRS.EPSG3857 : SRS.EPSG4326,
+    // set deckgl to EPSG:4326
+    srs: SRS.EPSG4326,
+    // srs: SRS.EPSG3857,
     useDevicePixels: true,
     _customRender: () => {
       map.triggerRepaint();

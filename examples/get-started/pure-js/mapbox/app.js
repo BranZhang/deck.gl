@@ -1,5 +1,5 @@
-import {Deck} from '@deck.gl/core';
-import {GeoJsonLayer, ArcLayer} from '@deck.gl/layers';
+import {MapboxLayer} from '@deck.gl/mapbox';
+import {GeoJsonLayer} from '@deck.gl/layers';
 import mapboxgl from 'mapbox-gl';
 
 // source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
@@ -14,60 +14,51 @@ const INITIAL_VIEW_STATE = {
   pitch: 30
 };
 
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+// const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94LWdsLWpzIiwiYSI6ImNram9ybGI1ajExYjQyeGxlemppb2pwYjIifQ.LGy5UGNIsXUZdYMvfYRiAQ';
 
 const map = new mapboxgl.Map({
   container: 'map',
-  style: MAP_STYLE,
-  // Note: deck.gl will be in charge of interaction and event handling
-  interactive: false,
+  style: {
+    version: 8,
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: ['https://osm.gs.mil/tiles/default_pc/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        zoomOffset: -1
+      }
+    },
+    glyphs: 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',
+    layers: [
+      {
+        id: 'osm',
+        type: 'raster',
+        source: 'osm'
+      }
+    ]
+  },
   center: [INITIAL_VIEW_STATE.longitude, INITIAL_VIEW_STATE.latitude],
   zoom: INITIAL_VIEW_STATE.zoom,
   bearing: INITIAL_VIEW_STATE.bearing,
   pitch: INITIAL_VIEW_STATE.pitch
 });
 
-export const deck = new Deck({
-  canvas: 'deck-canvas',
-  width: '100%',
-  height: '100%',
-  initialViewState: INITIAL_VIEW_STATE,
-  controller: true,
-  onViewStateChange: ({viewState}) => {
-    map.jumpTo({
-      center: [viewState.longitude, viewState.latitude],
-      zoom: viewState.zoom,
-      bearing: viewState.bearing,
-      pitch: viewState.pitch
-    });
-  },
-  layers: [
-    new GeoJsonLayer({
-      id: 'airports',
-      data: AIR_PORTS,
-      // Styles
-      filled: true,
-      pointRadiusMinPixels: 2,
-      pointRadiusScale: 2000,
-      getPointRadius: f => 11 - f.properties.scalerank,
-      getFillColor: [200, 0, 80, 180],
-      // Interactive props
-      pickable: true,
-      autoHighlight: true,
-      onClick: info =>
-        // eslint-disable-next-line
-        info.object && alert(`${info.object.properties.name} (${info.object.properties.abbrev})`)
-    }),
-    new ArcLayer({
-      id: 'arcs',
-      data: AIR_PORTS,
-      dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
-      // Styles
-      getSourcePosition: f => [-0.4531566, 51.4709959], // London
-      getTargetPosition: f => f.geometry.coordinates,
-      getSourceColor: [0, 128, 200],
-      getTargetColor: [200, 0, 80],
-      getWidth: 1
-    })
-  ]
+map.on('load', () => {
+  var l1 = new MapboxLayer({
+    id: 'airports',
+    type: GeoJsonLayer,
+    data: AIR_PORTS,
+    // Styles
+    filled: true,
+    pointRadiusMinPixels: 2,
+    pointRadiusScale: 2000,
+    getPointRadius: f => 11 - f.properties.scalerank,
+    getFillColor: [200, 0, 80, 180],
+    // Interactive props
+    pickable: true,
+    autoHighlight: true,
+  });
+
+  map.addLayer(l1);
 });
