@@ -328,7 +328,7 @@ export default class Viewport {
 
     // Calculate distance scales if lng/lat/zoom are provided
     this.distanceScales = this.isGeospatial
-      ? getDistanceScales({latitude, longitude})
+      ? getDistanceScales({latitude, longitude, srs: this.srs})
       : distanceScales || DEFAULT_DISTANCE_SCALES;
 
     this.focalDistance = focalDistance;

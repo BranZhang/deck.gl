@@ -33,6 +33,7 @@ export default class WebMercatorViewport {
       zoom = 0,
       pitch = 0,
       bearing = 0,
+      srs,
       altitude = null,
       fovy = null,
       position = null,
@@ -63,7 +64,7 @@ export default class WebMercatorViewport {
 
     const distanceScales = getDistanceScales({longitude, latitude});
 
-    const center = lngLatToWorld([longitude, latitude]);
+    const center = lngLatToWorld([longitude, latitude], srs);
     center[2] = 0;
 
     if (position) {
@@ -170,8 +171,8 @@ export default class WebMercatorViewport {
 
   // Projects xyz (possibly latitude and longitude) to pixel coordinates in window
   // using viewport projection parameters
-  project(xyz, {topLeft = true} = {}) {
-    const worldPosition = this.projectPosition(xyz);
+  project(xyz, {topLeft = true, srs} = {}, ) {
+    const worldPosition = this.projectPosition(xyz, srs);
     const coord = worldToPixels(worldPosition, this.pixelProjectionMatrix);
 
     const [x, y] = coord;

@@ -13,6 +13,7 @@ export default function normalizeViewportProps({
   longitude,
   latitude,
   zoom,
+  srs,
   pitch = 0,
   bearing = 0
 }) {
@@ -25,9 +26,9 @@ export default function normalizeViewportProps({
   }
 
   // Constrain zoom and shift center at low zoom levels
-  let flatViewport = new WebMercatorViewport({width, height, longitude, latitude, zoom});
-  let topY = flatViewport.project([longitude, MAX_LATITUDE])[1];
-  let bottomY = flatViewport.project([longitude, MIN_LATITUDE])[1];
+  let flatViewport = new WebMercatorViewport({width, height, longitude, latitude, zoom, srs});
+  let topY = flatViewport.project([longitude, MAX_LATITUDE], {srs})[1];
+  let bottomY = flatViewport.project([longitude, MIN_LATITUDE], {srs})[1];
   let shiftY = 0;
 
   if (bottomY - topY < height) {

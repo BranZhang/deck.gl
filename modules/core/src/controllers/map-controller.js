@@ -44,6 +44,7 @@ export class MapState extends ViewState {
      * Non-public API, see https://github.com/mapbox/mapbox-gl-js/issues/1137
      */
     altitude = DEFAULT_STATE.altitude,
+    srs,
 
     /** Viewport constraints */
     maxZoom = DEFAULT_STATE.maxZoom,
@@ -80,6 +81,7 @@ export class MapState extends ViewState {
       zoom,
       bearing,
       pitch,
+      srs,
       altitude,
       maxZoom,
       minZoom,
@@ -419,6 +421,7 @@ export default class MapController extends Controller {
   constructor(props) {
     props.dragMode = props.dragMode || 'pan';
     super(MapState, props);
+    this.srs = props.srs;
   }
 
   setProps(props) {
@@ -431,6 +434,7 @@ export default class MapController extends Controller {
       // Dimensions changed, normalize the props
       this.updateViewport(
         new this.ControllerState({
+          srs: this.srs,
           makeViewport: this.makeViewport,
           ...this.controllerStateProps,
           ...this._state

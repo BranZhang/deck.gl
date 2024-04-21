@@ -27,6 +27,7 @@ export {
   // CONSTANTS
   COORDINATE_SYSTEM,
   UNIT,
+  SRS,
   // Main class
   Deck,
   // Base Layers

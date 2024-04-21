@@ -278,7 +278,8 @@ export default class ViewManager {
         x: viewport.x,
         y: viewport.y,
         width: viewport.width,
-        height: viewport.height
+        height: viewport.height,
+        srs: this.srs
       };
 
       // TODO - check if view / controller type has changed, and replace the controller
