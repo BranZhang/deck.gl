@@ -1,112 +1,45 @@
-<p align="right">
-  <a href="https://npmjs.org/package/deck.gl">
-    <img src="https://img.shields.io/npm/v/deck.gl.svg?style=flat-square" alt="version" />
-  </a>
-  <a href="https://github.com/visgl/deck.gl/actions?query=workflow%3Atest+branch%3Amaster">
-    <img src="https://github.com/visgl/deck.gl/workflows/test/badge.svg?branch=master" alt="build" />
-  </a>
-  <a href="https://npmjs.org/package/deck.gl">
-    <img src="https://img.shields.io/npm/dm/@deck.gl/core.svg?style=flat-square" alt="downloads" />
-  </a>
-  <a href='https://coveralls.io/github/visgl/deck.gl?branch=master'>
-    <img src='https://img.shields.io/coveralls/visgl/deck.gl.svg?style=flat-square' alt='Coverage Status' />
-  </a>
-</p>
-
-<h1 align="center">deck.gl | <a href="https://deck.gl">Website</a></h1>
-
-<h5 align="center"> WebGL2-powered, highly performant large-scale data visualization</h5>
-
-[![docs](http://i.imgur.com/mvfvgf0.jpg)](https://visgl.github.io/deck.gl)
+# deck.gl with EPSG:4326
 
 
-deck.gl is designed to simplify high-performance, WebGL-based visualization of large data sets. Users can quickly get impressive visual results with minimal effort by composing existing layers, or leverage deck.gl's extensible architecture to address custom needs.
+I used to work on making MapboxJS and deck.gl support EPSG:4326 projection, so I share my code in this repo. 
 
-deck.gl maps **data** (usually an array of JSON objects) into a stack of visual **layers** - e.g. icons, polygons, texts; and look at them with **views**: e.g. map, first-person, orthographic.
+About how to make mapbox supports EPSG:4326 projection, you can refer to this repo,
 
-deck.gl handles a number of challenges out of the box:
+https://github.com/cgcs2000/mapbox-gl-js
 
-* Performant rendering and updating of large data sets
-* Interactive event handling such as picking, highlighting and filtering
-* Cartographic projections and integration with major basemap providers
-* A catalog of proven, well-tested layers
+This file `./examples/get-started/pure-js/mapbox/mapbox-gl.js`, is compiled from this repo.
 
-Deck.gl is designed to be highly customizable. All layers come with flexible APIs to allow programmatic control of each aspect of the rendering. All core classes such are easily extendable by the users to address custom use cases.
+By the way, cgcs2000 is similar to wgs84, you can treat them as same thing when talking about map projection.
 
-## Flavors
+Enter `./examples/get-started/pure-js/mapbox/` folder, and run webpack server, you will get a map like this picture.
 
-### Script Tag
+![screenshot](./imgs/deckgl-4326.png)
 
-```html
-<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+Currently, you should only use this deck.gl with mapbox, and deck.gl should be added to mapbox as a layer.
+
+Because deck.gl will not work properly with mouse drag and wheel zoom.
+
+If you want to use this code in your production, you still have some other work to do.
+
+## some detail
+
+I notice the calculation about map projection is processed by `math.gl`, so I copied all `math.gl` into this repo and made some change.
+
+For example:
+
+```javascript
+// Unproject world point [x,y] on map onto {lat, lon} on sphere
+export function worldToLngLat([x, y], srs) {
+  const lambda2 = (x / TILE_SIZE) * (2 * PI) - PI;
+  let phi2;
+  if (srs === SRS.EPSG3857) {
+    phi2 = 2 * (Math.atan(Math.exp((y / TILE_SIZE) * (2 * PI) - PI)) - PI_4);
+  } else {
+    phi2 = PI / 2 - 2 * PI * (1 - y / TILE_SIZE);
+  }
+  return [lambda2 * RADIANS_TO_DEGREES, phi2 * RADIANS_TO_DEGREES];
+}
 ```
 
-- [Get started](/docs/get-started/using-standalone.md#using-the-scripting-api)
-- [Full examples](https://github.com/visgl/deck.gl/tree/master/examples/get-started/scripting)
-
-### NPM Module
-
-```bash
-npm install deck.gl
-```
-
-#### Pure JS
-
-- [Get started](/docs/get-started/using-standalone.md)
-- [Full examples](/examples/get-started/pure-js)
-
-#### React
-
-- [Get started](/docs/get-started/using-with-react.md)
-- [Full examples](/examples/get-started/react)
-
-### Python
-
-```bash
-pip install pydeck
-```
-
-- [Get started](https://pydeck.gl/installation.html)
-- [Examples](https://pydeck.gl/)
-
-### Third-Party Bindings
-
-- [deckgl-typings](https://github.com/danmarshall/deckgl-typings) (Typescript)
-- [mapdeck](https://symbolixau.github.io/mapdeck/articles/mapdeck.html) (R)
-- [vega-deck.gl](https://github.com/microsoft/SandDance/tree/master/packages/vega-deck.gl) ([Vega](https://vega.github.io/))
-- [earthengine-layers](https://earthengine-layers.com/) ([Google Earth Engine](https://earthengine.google.com/))
-- [deck.gl-native](https://github.com/UnfoldedInc/deck.gl-native) (C++)
-
-## Learning Resources
-
-* [API documentation](https://deck.gl/#/documentation) for the latest release
-* [Website demos](https://deck.gl/#/examples) with links to source
-* [Interactive playground](https://deck.gl/playground)
-* [deck.gl Codepen demos](https://codepen.io/vis-gl/)
-* [deck.gl Observable demos](https://beta.observablehq.com/@pessimistress)
-* [vis.gl Medium blog](https://medium.com/vis-gl)
-* [deck.gl Slack workspace](https://join.slack.com/t/deckgl/shared_invite/zt-7oeoqie8-NQqzSp5SLTFMDeNSPxi7eg)
-
-## Contributing
-
-deck.gl is part of vis.gl, a [Urban Computing Foundation](https://uc.foundation/) project. Read the [contribution guidelines](/CONTRIBUTING.md) if you are intrested in contributing.
 
 
-## Attributions
-
-#### Data sources
-
-Data sources are listed in each example.
-
-
-#### The deck.gl project is supported by
-
-<a href="https://www.unfolded.ai"><img src="https://raw.githubusercontent.com/visgl/deck.gl-data/master/images/branding/unfolded.png" height="32" /></a>
-<a href="https://www.foursquare.com"><img src="https://raw.githubusercontent.com/visgl/deck.gl-data/master/images/branding/fsq.svg" height="40" /></a>
-
-<a href="https://www.carto.com"><img src="https://raw.githubusercontent.com/visgl/deck.gl-data/master/images/branding/carto.svg" height="48" /></a>
-
-<a href="https://www.mapbox.com"><img src="https://raw.githubusercontent.com/visgl/deck.gl-data/master/images/branding/mapbox.svg" height="44" /></a>
-<a href="https://www.uber.com"><img src="https://raw.githubusercontent.com/visgl/deck.gl-data/master/images/branding/uber.png" height="40" /></a>
-
-<a href="https://www.browserstack.com/"><img src="https://d98b8t1nnulk5.cloudfront.net/production/images/static/logo.svg" alt="BrowserStack" width="200" /></a>
