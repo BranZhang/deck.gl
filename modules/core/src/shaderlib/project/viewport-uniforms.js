@@ -230,6 +230,7 @@ function calculateViewportUniforms({
     // Projection mode values
     project_uCoordinateSystem: coordinateSystem,
     project_uProjectionMode: viewport.projectionMode,
+    project_uSrs: viewport.srs,
     project_uCoordinateOrigin: shaderCoordinateOrigin,
     project_uCommonOrigin: originCommon.slice(0, 3),
     project_uCenter: projectionCenter,

@@ -29,6 +29,7 @@ export default class ViewManager {
     this.width = 100;
     this.height = 100;
     this.viewState = {};
+    this.srs = null;
     this.controllers = {};
     this.timeline = props.timeline;
 
@@ -156,6 +157,10 @@ export default class ViewManager {
   }
 
   setProps(props) {
+    if ('srs' in props) {
+      this.srs = props.srs;
+    }
+
     if ('views' in props) {
       this._setViews(props.views);
     }
@@ -289,7 +294,7 @@ export default class ViewManager {
 
   // Rebuilds viewports from descriptors towards a certain window size
   _rebuildViewports() {
-    const {width, height, views} = this;
+    const {width, height, views, srs} = this;
 
     const oldControllers = this.controllers;
     this._viewports = [];
@@ -300,7 +305,7 @@ export default class ViewManager {
     for (let i = views.length; i--; ) {
       const view = views[i];
       const viewState = this.getViewState(view);
-      const viewport = view.makeViewport({width, height, viewState});
+      const viewport = view.makeViewport({width, height, viewState, srs});
 
       let oldController = oldControllers[view.id];
       if (view.controller && !oldController) {

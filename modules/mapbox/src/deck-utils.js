@@ -1,4 +1,5 @@
 import {Deck, WebMercatorViewport} from '@deck.gl/core';
+import {SRS} from '../../core/src/lib/constants';
 
 export function getDeckInstance({map, gl, deck}) {
   // Only create one deck instance per context
@@ -9,6 +10,8 @@ export function getDeckInstance({map, gl, deck}) {
   const customRender = deck && deck.props._customRender;
 
   const deckProps = {
+    // @ts-ignore
+    srs: (window?.aimap?.srs === 'epsg:3857') ? SRS.EPSG3857 : SRS.EPSG4326,
     useDevicePixels: true,
     _customRender: () => {
       map.triggerRepaint();
@@ -129,6 +132,7 @@ function getViewport(deck, map, useMapboxProjection = true) {
         y: 0,
         width: deck.width,
         height: deck.height,
+        srs: deck.srs,
         repeat: true
       },
       getViewState(map),

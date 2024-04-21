@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {COORDINATE_SYSTEM, PROJECTION_MODE, UNIT} from '../../lib/constants';
+import {COORDINATE_SYSTEM, PROJECTION_MODE, SRS, UNIT} from '../../lib/constants';
 
 // We are generating these from the js code in constants.js
 const COORDINATE_SYSTEM_GLSL_CONSTANTS = Object.keys(COORDINATE_SYSTEM)
@@ -27,6 +27,9 @@ const COORDINATE_SYSTEM_GLSL_CONSTANTS = Object.keys(COORDINATE_SYSTEM)
 const PROJECTION_MODE_GLSL_CONSTANTS = Object.keys(PROJECTION_MODE)
   .map(key => `const int PROJECTION_MODE_${key} = ${PROJECTION_MODE[key]};`)
   .join('');
+const SRS_TYPE_GLSL_CONSTANTS = Object.keys(SRS)
+  .map(key => `const int SRS_TYPE_${key} = ${SRS[key]};`)
+  .join('');
 const UNIT_GLSL_CONSTANTS = Object.keys(UNIT)
   .map(key => `const int UNIT_${key.toUpperCase()} = ${UNIT[key]};`)
   .join('');
@@ -34,10 +37,12 @@ const UNIT_GLSL_CONSTANTS = Object.keys(UNIT)
 export default `\
 ${COORDINATE_SYSTEM_GLSL_CONSTANTS}
 ${PROJECTION_MODE_GLSL_CONSTANTS}
+${SRS_TYPE_GLSL_CONSTANTS}
 ${UNIT_GLSL_CONSTANTS}
 
 uniform int project_uCoordinateSystem;
 uniform int project_uProjectionMode;
+uniform int project_uSrs;
 uniform float project_uScale;
 uniform bool project_uWrapLongitude;
 uniform vec3 project_uCommonUnitsPerMeter;
@@ -134,10 +139,17 @@ vec2 project_mercator_(vec2 lnglat) {
     x = mod(x + 180., 360.0) - 180.;
   }
   float y = clamp(lnglat.y, -89.9, 89.9);
-  return vec2(
-     radians(x) + PI,
-     2. * PI - PI * 0.5 + radians(y)
-  ) * WORLD_SCALE;
+  if (project_uSrs == SRS_TYPE_EPSG3857) {
+    return vec2(
+      radians(x) + PI,
+      PI + log(tan_fp32(PI * 0.25 + radians(y) * 0.5))
+    ) * WORLD_SCALE;
+  } else {
+    return vec2(
+      radians(x) + PI,
+      2. * PI - PI * 0.5 + radians(y)
+   ) * WORLD_SCALE;
+  }
 }
 
 vec3 project_globe_(vec3 lnglatz) {

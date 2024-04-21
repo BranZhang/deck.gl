@@ -63,7 +63,8 @@ export default class Viewport {
       x = 0,
       y = 0,
       width = 1,
-      height = 1
+      height = 1,
+      srs
     } = opts;
 
     this.id = id || this.constructor.displayName || 'viewport';
@@ -73,6 +74,7 @@ export default class Viewport {
     // Silently allow apps to send in w,h = 0,0
     this.width = width || 1;
     this.height = height || 1;
+    this.srs = srs;
     this._frustumPlanes = {};
 
     this._initViewMatrix(opts);
@@ -95,11 +97,9 @@ export default class Viewport {
 
   get projectionMode() {
     if (this.isGeospatial) {
-      // ZZZCCC
-      return PROJECTION_MODE.WEB_MERCATOR;
-      // return this.zoom < 12
-      //   ? PROJECTION_MODE.WEB_MERCATOR
-      //   : PROJECTION_MODE.WEB_MERCATOR_AUTO_OFFSET;
+      return this.zoom < 12
+        ? PROJECTION_MODE.WEB_MERCATOR
+        : PROJECTION_MODE.WEB_MERCATOR_AUTO_OFFSET;
     }
     return PROJECTION_MODE.IDENTITY;
   }
@@ -195,7 +195,7 @@ export default class Viewport {
    */
   projectFlat(xyz) {
     if (this.isGeospatial) {
-      return lngLatToWorld(xyz);
+      return lngLatToWorld(xyz, this.srs);
     }
     return xyz;
   }
@@ -210,7 +210,7 @@ export default class Viewport {
    */
   unprojectFlat(xyz) {
     if (this.isGeospatial) {
-      return worldToLngLat(xyz);
+      return worldToLngLat(xyz, this.srs);
     }
     return xyz;
   }
@@ -236,6 +236,7 @@ export default class Viewport {
       return getDistanceScales({
         longitude: coordinateOrigin[0],
         latitude: coordinateOrigin[1],
+        srs: this.srs,
         highPrecision: true
       });
     }

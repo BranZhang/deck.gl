@@ -45,7 +45,7 @@ import {Stats} from 'probe.gl';
 import {EventManager} from 'mjolnir.js';
 
 import assert from '../utils/assert';
-import {EVENTS} from './constants';
+import {EVENTS, SRS} from './constants';
 /* global document */
 
 function noop() {}
@@ -58,6 +58,7 @@ function getPropTypes(PropTypes) {
     id: PropTypes.string,
     width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    srs: PropTypes.string,
 
     // layer/view/controller settings
     layers: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
@@ -109,6 +110,7 @@ const defaultProps = {
   id: '',
   width: '100%',
   height: '100%',
+  srs: SRS.EPSG3857,
 
   pickingRadius: 0,
   layerFilter: null,
@@ -150,6 +152,7 @@ export default class Deck {
 
     this.width = 0; // "read-only", auto-updated from canvas
     this.height = 0; // "read-only", auto-updated from canvas
+    this.srs = null;
 
     // Maps view descriptors to vieports, rebuilds when width/height/viewState/views change
     this.viewManager = null;
@@ -276,13 +279,19 @@ export default class Deck {
     // Update CSS size of canvas
     this._setCanvasSize(this.props);
 
+    // Update srs, actually, srs should only be setted when inialize deck.
+    if ('srs' in props) {
+      this.srs = props.srs;
+    }
+
     // We need to overwrite CSS style width and height with actual, numeric values
     const resolvedProps = Object.create(this.props);
     Object.assign(resolvedProps, {
       views: this._getViews(),
       width: this.width,
       height: this.height,
-      viewState: this._getViewState()
+      viewState: this._getViewState(),
+      srs: this.srs
     });
 
     // Update the animation loop
@@ -670,6 +679,7 @@ export default class Deck {
       onInteractionStateChange: this._onInteractionStateChange.bind(this),
       views: this._getViews(),
       viewState: this._getViewState(),
+      srs: this.srs,
       width: this.width,
       height: this.height
     });

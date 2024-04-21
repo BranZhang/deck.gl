@@ -61,6 +61,7 @@ export default class WebMercatorViewport extends Viewport {
       zoom = 11,
       pitch = 0,
       bearing = 0,
+      srs,
       nearZMultiplier = 0.1,
       farZMultiplier = 1.01,
       orthographic = false,
@@ -126,6 +127,7 @@ export default class WebMercatorViewport extends Viewport {
       // x, y,
       width,
       height,
+      srs,
 
       // view matrix
       viewMatrix: viewMatrixUncentered,
@@ -142,6 +144,7 @@ export default class WebMercatorViewport extends Viewport {
     // Save parameters
     this.latitude = latitude;
     this.longitude = longitude;
+    this.srs = srs;
     this.zoom = zoom;
     this.pitch = pitch;
     this.bearing = bearing;

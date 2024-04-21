@@ -61,6 +61,11 @@ export const PROJECTION_MODE = {
   IDENTITY: 0
 };
 
+export const SRS = {
+  EPSG3857: 0,
+  EPSG4326: 1
+};
+
 export const UNIT = {
   common: 0,
   meters: 1,

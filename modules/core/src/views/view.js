@@ -57,7 +57,7 @@ export default class View {
 
   // Build a `Viewport` from a view descriptor
   // TODO - add support for autosizing viewports using width and height
-  makeViewport({width, height, viewState}) {
+  makeViewport({width, height, viewState, srs}) {
     if (this.viewportInstance) {
       return this.viewportInstance;
     }
@@ -66,6 +66,7 @@ export default class View {
 
     // Resolve relative viewport dimensions
     const viewportDimensions = this.getDimensions({width, height});
+    viewportDimensions.srs = srs;
     return this._getViewport(viewState, viewportDimensions);
   }
 

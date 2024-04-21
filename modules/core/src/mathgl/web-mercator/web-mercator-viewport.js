@@ -198,8 +198,8 @@ export default class WebMercatorViewport {
   // NON_LINEAR PROJECTION HOOKS
   // Used for web meractor projection
 
-  projectPosition(xyz) {
-    const [X, Y] = lngLatToWorld(xyz);
+  projectPosition(xyz, srs) {
+    const [X, Y] = lngLatToWorld(xyz, srs);
     const Z = (xyz[2] || 0) * this.distanceScales.unitsPerMeter[2];
     return [X, Y, Z];
   }
