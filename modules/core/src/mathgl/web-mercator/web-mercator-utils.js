@@ -2,6 +2,8 @@
 
 import {createMat4, transformVector, log2} from './math-utils';
 
+import {SRS} from '../../../../core/src/lib/constants';
+
 import * as mat4 from 'gl-matrix/mat4';
 import * as vec2 from 'gl-matrix/vec2';
 import * as vec3 from 'gl-matrix/vec3';
@@ -38,25 +40,31 @@ export function scaleToZoom(scale) {
  *   Specifies a point on the sphere to project onto the map.
  * @return [x,y] coordinates.
  */
-export function lngLatToWorld([lng, lat]) {
+export function lngLatToWorld([lng, lat], srs) {
   assert(Number.isFinite(lng));
   assert(Number.isFinite(lat) && lat >= -90 && lat <= 90, 'invalid latitude');
 
   const lambda2 = lng * DEGREES_TO_RADIANS;
   const phi2 = lat * DEGREES_TO_RADIANS;
   const x = (TILE_SIZE * (lambda2 + PI)) / (2 * PI);
-  // ZZZCCC
-  // const y = (TILE_SIZE * (PI + Math.log(Math.tan(PI_4 + phi2 * 0.5)))) / (2 * PI);
-  const y = TILE_SIZE * (1 - (PI_4 - phi2 * 0.5) / PI);
+  let y;
+  if (srs === SRS.EPSG3857) {
+    y = (TILE_SIZE * (PI + Math.log(Math.tan(PI_4 + phi2 * 0.5)))) / (2 * PI);
+  } else {
+    y = TILE_SIZE * (1 - (PI_4 - phi2 * 0.5) / PI);
+  }
   return [x, y];
 }
 
 // Unproject world point [x,y] on map onto {lat, lon} on sphere
-export function worldToLngLat([x, y]) {
+export function worldToLngLat([x, y], srs) {
   const lambda2 = (x / TILE_SIZE) * (2 * PI) - PI;
-  // ZZZCCC
-  // const phi2 = 2 * (Math.atan(Math.exp((y / TILE_SIZE) * (2 * PI) - PI)) - PI_4);
-  const phi2 = PI / 2 - 2 * PI * (1 - y / TILE_SIZE);
+  let phi2;
+  if (srs === SRS.EPSG3857) {
+    phi2 = 2 * (Math.atan(Math.exp((y / TILE_SIZE) * (2 * PI) - PI)) - PI_4);
+  } else {
+    phi2 = PI / 2 - 2 * PI * (1 - y / TILE_SIZE);
+  }
   return [lambda2 * RADIANS_TO_DEGREES, phi2 * RADIANS_TO_DEGREES];
 }
 
@@ -75,7 +83,7 @@ export function getMeterZoom({latitude}) {
  * with latitude.
  */
 
-export function getDistanceScales({latitude, longitude, highPrecision = false}) {
+export function getDistanceScales({latitude, longitude, srs, highPrecision = false}) {
   assert(Number.isFinite(latitude) && Number.isFinite(longitude));
 
   const result = {};
@@ -90,7 +98,13 @@ export function getDistanceScales({latitude, longitude, highPrecision = false}) 
        = -scale * TILE_SIZE * DEGREES_TO_RADIANS / cos(lat * DEGREES_TO_RADIANS)  / (2 * PI)
    */
   const unitsPerDegreeX = worldSize / 360;
-  const unitsPerDegreeY = unitsPerDegreeX / latCosine;
+  let unitsPerDegreeY;
+  // when using 4326, unitsPerDegreeY == unitsPerDegreeX
+  if (srs === SRS.EPSG3857) {
+    unitsPerDegreeY = unitsPerDegreeX / latCosine;
+  } else {
+    unitsPerDegreeY = worldSize / 360;
+  }
 
   /**
    * Number of pixels occupied by one meter around current lat/lon:

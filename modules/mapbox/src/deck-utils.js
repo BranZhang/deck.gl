@@ -11,7 +11,7 @@ export function getDeckInstance({map, gl, deck}) {
 
   const deckProps = {
     // @ts-ignore
-    srs: (window?.aimap?.srs === 'epsg:3857') ? SRS.EPSG3857 : SRS.EPSG4326,
+    srs: (window?.srs === 'epsg:3857') ? SRS.EPSG3857 : SRS.EPSG4326,
     useDevicePixels: true,
     _customRender: () => {
       map.triggerRepaint();
